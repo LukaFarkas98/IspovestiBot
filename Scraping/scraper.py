@@ -48,7 +48,7 @@ def scrape():
             confession_text_div = conf.find("div", class_ = confession_text_class_name)
 
             confession_text = confession_text_div.get_text(strip=True) if confession_text_div else ""
-
+            
 
             approve_div = conf.find("div", class_ = confession_value_class_name, id = lambda x : x and x.startswith(approve_count_id) )
 
