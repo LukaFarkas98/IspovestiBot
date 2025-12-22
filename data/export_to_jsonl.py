@@ -20,5 +20,8 @@ def export():
     db.close()
     print(f"Exported {len(confessions)} confessions to {OUTPUT_FILE}")
 
+
+
+
 if __name__ == "__main__":
     export()

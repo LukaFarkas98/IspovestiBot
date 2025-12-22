@@ -15,7 +15,7 @@ model = AutoModelForCausalLM.from_pretrained(
 
 model = PeftModel.from_pretrained(model, adapter_path)
 
-prompt = "reci mi kako si zavrsio u nemackoj:"
+prompt = "mozda ce zvucati bezobrazno, ali"
 
 inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
 

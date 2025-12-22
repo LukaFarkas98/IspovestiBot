@@ -1,4 +1,5 @@
 import torch
+from datetime import datetime
 from datasets import load_dataset
 from transformers import (
     AutoModelForCausalLM,
@@ -14,8 +15,9 @@ from peft import LoraConfig, get_peft_model
 # CONFIG
 # -----------------------
 MODEL_NAME = "mistralai/Mistral-7B-v0.1"
-DATA_PATH = "../data/confessions.jsonl"
-OUTPUT_DIR = "./mistral-confessions-lora"
+DATA_PATH = "../data/confessions_Archive_100k_clean_TRAINING.jsonl"
+RUN_NAME = f"mistral-confessions-lora-100k-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+OUTPUT_DIR = f"./{RUN_NAME}"
 
 # -----------------------
 # LOAD DATASET
@@ -36,7 +38,7 @@ def tokenize(example):
     tokens = tokenizer(
         example["text"],
         truncation=True,
-        max_length=384,
+        max_length=512,
         padding="max_length",
     )
 
@@ -103,12 +105,12 @@ data_collator = DataCollatorForLanguageModeling(
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=16,
-    learning_rate=2e-4,
-    num_train_epochs=3,
+    gradient_accumulation_steps=32,
+    learning_rate=5e-5,
+    num_train_epochs=1,
     fp16=True,
-    logging_steps=10,
-    save_steps=500,
+    logging_steps=50,
+    save_steps=1000,
     save_total_limit=2,
     report_to="none",
 )
