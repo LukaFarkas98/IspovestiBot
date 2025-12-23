@@ -1,53 +1,83 @@
 import json
-from collections import Counter
+import random
+from collections import defaultdict
 from sklearn.feature_extraction.text import TfidfVectorizer
-import numpy as np       
+import numpy as np
 
 INPUT_FILE = "confessions_with_clusters_hybrid.jsonl"
+OUTPUT_JSON = "cluster_inspection.json"
 
+SERBIAN_STOPWORDS = {
+    "da","je","sam","se","mi","ne","na","rođendan","ispovest","ispovijest",
+    "za","su","ali","me","koji","od","nije","to","sve","samo","ili","što","sa",
+    "ja","kad","kako","jer","kada","znam","ima","iz","mu","smo"
+}
 
-import json
-from collections import defaultdict
-
+# -------------------------
+# Load texts per cluster
+# -------------------------
 cluster_texts = defaultdict(list)
 
-
-#PRESLOZI OVO U JEDNU FUNKCIJU DA DOBIJEMO KLJUCNE RECI ZA KLASTERE
-def printNumbersByCluster():
-    counter = Counter()
-    with open("confessions_with_clusters_hybrid.jsonl", "r", encoding="utf-8") as f:
-        for line in f:
-            counter[json.loads(line)["cluster_id"]] += 1
-
-    for cid, count in counter.most_common():
-        print(f"Cluster {cid}: {count} texts")
-
-
-with open("confessions_with_clusters_hybrid.jsonl", "r", encoding="utf-8") as f:
+with open(INPUT_FILE, "r", encoding="utf-8") as f:
     for line in f:
         item = json.loads(line)
         cid = item["cluster_id"]
-        if cid != -1:  # skip noise
+        if cid != -1:
             cluster_texts[cid].append(item["text"])
 
-     
+
+# -------------------------
+# TF-IDF keywords
+# -------------------------
 def top_keywords_per_cluster(texts, top_k=10):
+    if len(texts) < 20:
+        return []
+
     vectorizer = TfidfVectorizer(
-        max_features=5000,
-        stop_words="english",
+        max_features=8000,
+        stop_words=list(SERBIAN_STOPWORDS),
         ngram_range=(1, 2),
-        min_df=5
+        min_df=5,
+        max_df=0.8
     )
-    X = vectorizer.fit_transform(texts)
+
+    try:
+        X = vectorizer.fit_transform(texts)
+    except ValueError:
+        return []
+
+    if X.shape[1] == 0:
+        return []
+
     scores = np.asarray(X.mean(axis=0)).ravel()
     terms = vectorizer.get_feature_names_out()
+
+    if len(terms) == 0:
+        return []
+
     top_idx = scores.argsort()[::-1][:top_k]
     return [terms[i] for i in top_idx]
 
-cluster_sizes = Counter({cid: len(txts) for cid, txts in cluster_texts.items()})
 
-for cid, size in cluster_sizes.most_common(10):
-    keywords = top_keywords_per_cluster(cluster_texts[cid], top_k=8)
-    print(f"\nCluster {cid} ({size} texts)")
-    print(", ".join(keywords))
+# -------------------------
+# Build cluster summary
+# -------------------------
+cluster_summary = {}
 
+for cid, texts in cluster_texts.items():
+    sample_size = min(5, len(texts))
+    random_samples = random.sample(texts, sample_size)
+
+    cluster_summary[cid] = {
+        "size": len(texts),
+        "keywords": top_keywords_per_cluster(texts, top_k=10),
+        "sample_confessions": random_samples
+    }
+
+# -------------------------
+# Save to JSON
+# -------------------------
+with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+    json.dump(cluster_summary, f, ensure_ascii=False, indent=2)
+
+print(f"Saved cluster inspection data for {len(cluster_summary)} clusters to {OUTPUT_JSON}")
