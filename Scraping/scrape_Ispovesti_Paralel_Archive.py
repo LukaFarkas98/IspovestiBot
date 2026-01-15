@@ -10,9 +10,9 @@ import os
 BASE_URL = "https://ispovesti.com/sort/calendar"
 HEADERS = {"User-Agent": "Mozilla/5.0 (learning project)"}
 
-TARGET_CONFESSIONS = 100_000
-OUTPUT_FILE = "confessions_Ispovesti_Archive_raw.json"
-JSONL_FILE = "confessions_Archive_100k.jsonl"
+TARGET_CONFESSIONS = 200_000
+OUTPUT_FILE = "confessions_Ispovesti_Archive_raw_200k.json"
+JSONL_FILE = "confessions_Archive_200k.jsonl"
 
 CONFESSION_CLASS = "confession"
 TEXT_CLASS = "confession-text"
@@ -137,7 +137,7 @@ def scrape():
     if resume_date:
         current_date = resume_date - timedelta(days=1)
     else:
-        current_date = datetime(2025, 12, 17)
+        current_date = datetime(2015, 12, 17)
 
     min_date = datetime(2010, 1, 1)
 

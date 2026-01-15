@@ -8,7 +8,7 @@ Confession.metadata.create_all(bind=engine)
 
 approveTag = "approve"
 disapproveTag = "disapprove"
-confession_100k_path = "confessions_Archive_100k.jsonl"
+confession_100k_path = "../Scraping/confessions_Archive_200k.jsonl"
 def parse_int(value):
     try:
         return int(value)

@@ -2,36 +2,17 @@ import re
 import unicodedata
 import json
 
-def clean_text(text: str) -> str:
-    if not text:
-        return ""
-    
-    # Normalize Unicode (NFKC removes weird forms)
-    text = unicodedata.normalize("NFKC", text)
-    
-    # Replace newlines and tabs with space
-    text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ")
-    
-    # Replace en-dash / em-dash with normal dash
-    text = text.replace("–", "-").replace("—", "-")
-    
-    # Remove extra spaces
-    text = re.sub(r"\s+", " ", text)
-    
-    # Strip leading/trailing spaces
-    text = text.strip()
-    
-    return text
 
-
-
-INPUT_FILE = "confessions_Archive_100k.jsonl"
-OUTPUT_FILE = "confessions_Archive_100k_clean_TRAINING.jsonl"
-
+INPUT_FILE = "../Clustering/confessions_COMBINED_140K.jsonl"
+OUTPUT_FILE = "confessions_Archive_140k_clean.jsonl"
 
 PREFIX = "Ispovest:\n"
 
+
 def clean_text(text: str) -> str:
+    if not text:
+        return ""
+
     # Unicode normalize (fix weird chars)
     text = unicodedata.normalize("NFKC", text)
 
@@ -44,18 +25,45 @@ def clean_text(text: str) -> str:
 
     return text
 
+
+bad_lines = 0
+kept = 0
+
 with open(INPUT_FILE, "r", encoding="utf-8") as fin, \
      open(OUTPUT_FILE, "w", encoding="utf-8") as fout:
 
-    for line in fin:
-        item = json.loads(line)
+    for line_num, line in enumerate(fin, start=1):
+        line = line.strip()
+
+        # skip empty lines
+        if not line:
+            continue
+
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError as e:
+            bad_lines += 1
+            print(f"[WARN] Bad JSON on line {line_num}: {e}")
+            continue
+
+        if "text" not in item:
+            bad_lines += 1
+            print(f"[WARN] Missing 'text' on line {line_num}")
+            continue
 
         text = clean_text(item["text"])
         if not text:
             continue
 
-        item["text"] = PREFIX + text
-        #fout.write(json.dumps(item, ensure_ascii=False) + "\n")
-        fout.write(json.dumps({"text": item["text"]}, ensure_ascii=False) + "\n")
+        fout.write(
+            json.dumps(
+                {"text": PREFIX + text},
+                ensure_ascii=False
+            ) + "\n"
+        )
+        kept += 1
 
-print("✅ Cleaning done →", OUTPUT_FILE)
+
+print(f"✅ Cleaning done → {OUTPUT_FILE}")
+print(f"🧹 Kept {kept} entries")
+print(f"⚠️ Skipped {bad_lines} bad lines")

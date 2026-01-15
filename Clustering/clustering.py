@@ -13,8 +13,8 @@ from tqdm import tqdm
 # CONFIG
 # =====================
 
-INPUT_FILE = "../data/confessions_Archive_100k_clean_TRAINING.jsonl"
-OUTPUT_FILE = "confessions_with_clusters_hybrid.jsonl"
+INPUT_FILE = "confessions_Archive_140k_clean.jsonl"
+OUTPUT_FILE = "confessions_with_clusters_hybrid_140K.jsonl"
 
 MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 BATCH_SIZE = 64
